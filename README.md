@@ -7,7 +7,7 @@ The code was successfully built and run with these versions:
 
 ```
 Python 3.6
-toch 1.10.0-cu113
+torch 1.10.0-cu113
 ```
 Note: You can also create the environment I've tested with by importing _environment.yml_ in conda.
 
@@ -18,7 +18,6 @@ You can replicate the results with putting the data in a similar directory tree 
 
 ```
 /data/
-  coco/
      CAD_WALK_Hallux_Valgus_PreSurgery/
         HalluxValgus_PreSugery
             HV01/

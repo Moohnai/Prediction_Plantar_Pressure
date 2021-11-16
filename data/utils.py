@@ -1,5 +1,6 @@
 import nibabel as nib
 import  os
+from os import path
 
 def SubDirReader(data_path):
     img_L = []
@@ -24,21 +25,28 @@ def SubDirReader(data_path):
 def DataReader(path):
     P_R = []
     P_L = []
-    HalluxValgus= path + '/CAD_WALK_Hallux_Valgus_PreSurgery/HalluxValgus_PreSugery'
-    for folder in os.listdir(HalluxValgus) :
-        data_path = os.path.join(HalluxValgus, folder)
-        r, l=SubDirReader(data_path)
-        P_R.append(r)
-        P_L.append(l)
+    HalluxValgus= path + '/CAD_WALK_Hallux_Valgus_PreSurgery/HalluxValgus_PreSugery/'
+    for folder in os.listdir(HalluxValgus):
+        if os.path.isdir(HalluxValgus + folder):
+            data_path = os.path.join(HalluxValgus, folder)
+            r, l=SubDirReader(data_path)
+            P_R.append(r)
+            P_L.append(l)
+        else:
+            continue
+
 
 
     H_R = []
     H_L = []
-    HealthyControls= path + '/CAD_WALK_Healthy_Controls_Dataset/HealthyControls'
-    for folder in os.listdir(HealthyControls) :
-        data_path = os.path.join(HealthyControls, folder)
-        r, l = SubDirReader(data_path)
-        H_R.append(r)
-        H_L.append(l)
+    HealthyControls= path + '/CAD_WALK_Healthy_Controls_Dataset/HealthyControls/'
+    for folder in os.listdir(HealthyControls):
+        if os.path.isdir(HealthyControls + folder):
+            data_path = os.path.join(HealthyControls, folder)
+            r, l = SubDirReader(data_path)
+            H_R.append(r)
+            H_L.append(l)
+        else:
+            continue
 
     return P_R, P_L, H_R, H_L

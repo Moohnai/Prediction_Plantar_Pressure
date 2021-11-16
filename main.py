@@ -9,6 +9,7 @@ from utils.pytorchtools import EarlyStopping
 from data.utils import DataReader
 from data.preprocess import DataPreprocess
 from model.model import Net
+from vit import ViT
 
 
 # *******softmax_cross_entropy_with_logits & 3 deconvolution layer**********
@@ -49,7 +50,20 @@ label_valid = [label[idx] for idx in valid_idx]
 hidden_dim=144
 label_size=47*32
 input_size=47*32
-model = Net(hidden_dim, input_size).cuda()
+# model = Net(hidden_dim, input_size)
+model = ViT(
+    img_size=224,
+    patch_size=16,
+    in_ch=3,
+    num_classes=1000,
+    use_mlp=True,
+    embed_dim=768,
+    depth=12,
+    num_heads=12,
+    mlp_ratio=4,
+    drop_rate=0.0,
+)
+model.load_state_dict('vit_16_224_imagenet1000.pth')
 loss_function1 = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.01)
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.9)
@@ -75,17 +89,17 @@ for epoch in range(500):
     label_train = [label_train[idx] for idx in ind_list]
     for i in range(len(data_train)):
         model.zero_grad()
-        Net_out=model(torch.FloatTensor(data_train[i]).view((data_train[i].shape[2]), 1 , 47*32).cuda())
+        Net_out=model(torch.FloatTensor(data_train[i]).view((data_train[i].shape[2]), 1 , 47*32))
         targets.append(Net_out)
         labels.append(label_train[i])
 
 
         if(i%mini_batch_size== mini_batch_size-1) or (i == len(data_train)-1):
 
-            targets = torch.cat(targets).view(-1,47*32)
+            targets = torch.cat(targets).view(-1, 47*32)
             labels = np.array(labels).reshape(-1, 47*32)
 
-            loss =alpha* torch.sum(torch.sum(- (torch.FloatTensor(labels)).cuda() * F.log_softmax(targets, -1), -1))+loss_function1((targets), torch.FloatTensor(labels).cuda())
+            loss =alpha* torch.sum(torch.sum(- (torch.FloatTensor(labels)) * F.log_softmax(targets, -1), -1))+loss_function1((targets), torch.FloatTensor(labels))
 
             targets = []
             labels = []
@@ -105,13 +119,13 @@ for epoch in range(500):
             running_loss_Valid = 0
             for i in range(len(data_valid)):
                 model.zero_grad()
-                Net_out = model(torch.FloatTensor(data_valid[i]).view((data_valid[i].shape[2]), 1, 47 * 32).cuda())
+                Net_out = model(torch.FloatTensor(data_valid[i]).view((data_valid[i].shape[2]), 1, 47 * 32))
 
                 targets_2.append(Net_out)
                 labels_2.append(label_valid[i])
             targets_2 = torch.cat(targets_2).view(-1, 47 * 32)
             labels_2= np.array(labels_2).reshape(-1, 47 * 32)
-            loss = loss_function1((targets_2), torch.FloatTensor(labels_2).cuda())
+            loss = loss_function1((targets_2), torch.FloatTensor(labels_2))
             running_loss_Valid += loss.detach().cpu().numpy()
             print('Val_loss: %.5f' % (running_loss_Valid/len(data_valid)))
         #### Check early stopping
@@ -134,13 +148,13 @@ with torch.no_grad():
     running_loss_test=0
     for i in range(len(data_test)):
         model.zero_grad()
-        Net_out = model(torch.FloatTensor(data_test[i]).view((data_test[i].shape[2]), 1, 47 * 32).cuda())
+        Net_out = model(torch.FloatTensor(data_test[i]).view((data_test[i].shape[2]), 1, 47 * 32))
 
         targets_2.append(Net_out)
         labels_2.append(label_test[i])
     targets_2 = torch.cat(targets_2).view(-1, 47 * 32)
     labels_2 = np.array(labels_2).reshape(-1, 47 * 32)
-    loss = loss_function1((targets_2), torch.FloatTensor(labels_2).cuda())
+    loss = loss_function1((targets_2), torch.FloatTensor(labels_2))
     running_loss_test += loss.detach().cpu().numpy()
     print('test_loss: %.5f' % (running_loss_test/len(data_test)))
 
@@ -171,5 +185,5 @@ plt.imshow(targets_2[i].cpu())
 plt.figure(19)
 plt.imshow(label_train[i])
 plt.figure(20)
-plt.imshow(model(torch.FloatTensor(data_train[i]).view((data_train[i].shape[2]), 1 , 47*32).cuda()).view(47,32).detach().cpu().numpy())
+plt.imshow(model(torch.FloatTensor(data_train[i]).view((data_train[i].shape[2]), 1 , 47*32)).view(47,32).detach().cpu().numpy())
 plt.show()
